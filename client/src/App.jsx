@@ -1,7 +1,30 @@
 import { useEffect, useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import "./index.css";
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
 
-function App() {
+function LogoD() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#1A2E44", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: "30px", height: "30px", borderRadius: "7px", background: "#7DC9A8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "18px", color: "#1A2E44", lineHeight: 1 }}>M</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <div style={{ display: "flex", alignItems: "baseline" }}>
+          <span style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "16px", color: "#fff", lineHeight: 1 }}>atch</span>
+          <span style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: "16px", color: "#7DC9A8", lineHeight: 1, marginLeft: "2px" }}>Tutor</span>
+        </div>
+        <span style={{ fontFamily: "Arial, sans-serif", fontSize: "9px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.8px" }}>Find your perfect tutor</span>
+      </div>
+    </div>
+  );
+}
+
+function Home() {
+  const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
@@ -64,12 +87,24 @@ function App() {
   return (
     <div className="container">
       <nav className="navbar">
-        <h2>Match Tutor</h2>
+        <LogoD />
         <div>
           <a href="#about">About</a>
           <a href="#tutors">Tutors</a>
           <a href="#ai-match">AI Match</a>
           <a href="#book">Book</a>
+          <button
+            onClick={() => navigate("/signup")}
+            style={{ padding: "8px 18px", background: "#fff", color: "#1A2E44", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, marginLeft: "8px" }}
+          >
+            Sign Up
+          </button>
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={{ padding: "8px 18px", background: "#7DC9A8", color: "#0a2a1e", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, marginLeft: "6px" }}
+          >
+            Dashboard
+          </button>
         </div>
       </nav>
 
@@ -142,14 +177,7 @@ function App() {
           </button>
         </form>
         {recommendation && (
-          <div style={{
-            marginTop: "20px",
-            background: "white",
-            padding: "20px",
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-            whiteSpace: "pre-wrap"
-          }}>
+          <div style={{ marginTop: "20px", background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", whiteSpace: "pre-wrap" }}>
             <h3>🎯 Your Recommended Tutors</h3>
             <p>{recommendation}</p>
           </div>
@@ -167,6 +195,16 @@ function App() {
         </form>
       </section>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }
 
