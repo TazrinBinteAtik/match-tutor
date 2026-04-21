@@ -154,6 +154,81 @@ app.post('/book', async (req, res) => {
   }
 });
 
+app.post('/recommend', async (req, res) => {
+  const { subject, level, budget, message } = req.body;
+
+  try {
+    const tutors = await Tutor.find({ available: true });
+
+    const scored = tutors.map(tutor => {
+      let score = 0;
+      const reasons = [];
+
+      // Subject match
+      if (tutor.subject.toLowerCase().includes(subject.toLowerCase()) ||
+          subject.toLowerCase().includes(tutor.subject.toLowerCase())) {
+        score += 50;
+        reasons.push(`teaches ${tutor.subject}`);
+      }
+
+      // Level match
+      if (tutor.level.toLowerCase().includes(level.toLowerCase()) ||
+          level.toLowerCase().includes(tutor.level.toLowerCase()) ||
+          tutor.level.toLowerCase().includes('all')) {
+        score += 30;
+        reasons.push(`covers ${tutor.level}`);
+      }
+
+      // Budget match
+      const tutorRate = parseInt(tutor.rate.replace(/[^0-9]/g, ''));
+      const studentBudget = parseInt(budget.replace(/[^0-9]/g, ''));
+      if (!isNaN(tutorRate) && !isNaN(studentBudget)) {
+        if (tutorRate <= studentBudget) {
+          score += 20;
+          reasons.push(`within your budget at ${tutor.rate}`);
+        }
+      }
+
+      // Bonus for high rating
+      if (tutor.rating >= 4.8) {
+        score += 10;
+        reasons.push(`highly rated at ${tutor.rating}/5`);
+      }
+
+      return { tutor, score, reasons };
+    });
+
+    const top = scored
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    if (top.length === 0) {
+      return res.json({
+        recommendation: `Sorry, we could not find a tutor matching "${subject}" at "${level}" level within your budget. Try different criteria!`
+      });
+    }
+
+    let text = `Here are your top tutor matches for ${subject}:\n\n`;
+    top.forEach((item, i) => {
+      text += `${i + 1}. ${item.tutor.name}\n`;
+      text += `   Subject: ${item.tutor.subject}\n`;
+      text += `   Level: ${item.tutor.level}\n`;
+      text += `   Rate: ${item.tutor.rate}\n`;
+      text += `   Rating: ${item.tutor.rating}/5\n`;
+      text += `   Experience: ${item.tutor.experience}\n`;
+      text += `   Why: ${item.reasons.join(', ')}\n\n`;
+    });
+
+    res.json({ recommendation: text });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Recommendation failed' });
+  }
+});
+
+
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

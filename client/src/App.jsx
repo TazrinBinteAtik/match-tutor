@@ -7,6 +7,9 @@ function App() {
   const [formData, setFormData] = useState({
     studentName: "", email: "", subject: "", message: ""
   });
+  const [aiForm, setAiForm] = useState({ subject: "", level: "", budget: "", message: "" });
+  const [recommendation, setRecommendation] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -35,6 +38,24 @@ function App() {
     }
   };
 
+  const handleAiSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setRecommendation("");
+    try {
+      const response = await fetch(`${API_URL}/recommend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(aiForm)
+      });
+      const data = await response.json();
+      setRecommendation(data.recommendation || data.error);
+    } catch (err) {
+      setRecommendation("Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
+
   const filtered = tutors.filter(t =>
     t.subject.toLowerCase().includes(search.toLowerCase()) ||
     t.name.toLowerCase().includes(search.toLowerCase())
@@ -47,6 +68,7 @@ function App() {
         <div>
           <a href="#about">About</a>
           <a href="#tutors">Tutors</a>
+          <a href="#ai-match">AI Match</a>
           <a href="#book">Book</a>
         </div>
       </nav>
@@ -85,6 +107,53 @@ function App() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section id="ai-match">
+        <h2>🤖 AI Tutor Recommender</h2>
+        <p>Answer a few questions and we will find your perfect tutor!</p>
+        <form className="book-form" onSubmit={handleAiSubmit}>
+          <input
+            type="text"
+            placeholder="What subject do you need help with?"
+            value={aiForm.subject}
+            onChange={(e) => setAiForm({ ...aiForm, subject: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="What is your level? (e.g. O-Level, A-Level)"
+            value={aiForm.level}
+            onChange={(e) => setAiForm({ ...aiForm, level: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="What is your budget? (e.g. $20/hr)"
+            value={aiForm.budget}
+            onChange={(e) => setAiForm({ ...aiForm, budget: e.target.value })}
+          />
+          <textarea
+            placeholder="Any other details? (e.g. I struggle with algebra)"
+            rows="3"
+            value={aiForm.message}
+            onChange={(e) => setAiForm({ ...aiForm, message: e.target.value })}
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? "Finding your tutor..." : "✨ Find My Perfect Tutor"}
+          </button>
+        </form>
+        {recommendation && (
+          <div style={{
+            marginTop: "20px",
+            background: "white",
+            padding: "20px",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            whiteSpace: "pre-wrap"
+          }}>
+            <h3>🎯 Your Recommended Tutors</h3>
+            <p>{recommendation}</p>
+          </div>
+        )}
       </section>
 
       <section id="book">
