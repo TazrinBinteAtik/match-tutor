@@ -4,12 +4,15 @@ const cors     = require('cors');
 const mongoose = require('mongoose');
 const Tutor    = require('./models/Tutor');
 const Booking  = require('./models/Booking');
+const authRoutes = require('./routes/auth');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/api/auth', authRoutes);
 
 console.log('Attempting to connect to MongoDB...');
 console.log('URI starts with:', process.env.MONGO_URI?.substring(0, 30));
@@ -97,12 +100,12 @@ app.get('/tutors', async (req, res) => {
 });
 
 app.post('/book', async (req, res) => {
-  const { studentName, email, subject, message } = req.body;
+  const { studentName, email, subject, message, tutorName } = req.body;
   if (!studentName || !email || !subject || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
   try {
-    const booking = new Booking({ studentName, email, subject, message });
+    const booking = new Booking({ studentName, email, subject, message, tutorName });
     await booking.save();
     res.json({ message: 'Booking request sent successfully!' });
   } catch (err) {
@@ -168,7 +171,6 @@ app.post('/recommend', async (req, res) => {
   }
 });
 
-// ── NEW: GET all bookings (for tutor dashboard) ──────────────
 app.get('/bookings', async (req, res) => {
   try {
     const bookings = await Booking.find().sort({ createdAt: -1 });
@@ -178,7 +180,6 @@ app.get('/bookings', async (req, res) => {
   }
 });
 
-// ── NEW: PATCH accept a booking ──────────────────────────────
 app.patch('/bookings/:id/accept', async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(
@@ -192,7 +193,6 @@ app.patch('/bookings/:id/accept', async (req, res) => {
   }
 });
 
-// ── NEW: PATCH reject a booking ──────────────────────────────
 app.patch('/bookings/:id/reject', async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(
