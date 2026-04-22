@@ -1,133 +1,128 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (!stored) { navigate("/login"); return; }
+    setUser(JSON.parse(stored));
     fetch(`${API_URL}/bookings`)
       .then(r => r.json())
-      .then(data => { setBookings(data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(data => setBookings(Array.isArray(data) ? data : []))
+      .catch(() => setBookings([]));
   }, []);
 
   const handleAction = async (id, action) => {
-    const res = await fetch(`${API_URL}/bookings/${id}/${action}`, { method: "PATCH" });
-    const data = await res.json();
-    if (res.ok) {
-      setBookings(prev => prev.map(b => b._id === id ? { ...b, status: action === "accept" ? "accepted" : "rejected" } : b));
-      alert(data.message);
-    }
+    await fetch(`${API_URL}/bookings/${id}/${action}`, { method: "PATCH" });
+    setBookings(prev => prev.map(b => b._id === id ? { ...b, status: action === "accept" ? "accepted" : "rejected" } : b));
   };
 
+  if (!user) return <div style={{padding:"40px",textAlign:"center"}}>Loading...</div>;
+
+  const isTutor = user.role === "tutor";
   const pending = bookings.filter(b => b.status === "pending");
   const accepted = bookings.filter(b => b.status === "accepted");
   const rejected = bookings.filter(b => b.status === "rejected");
 
-  return (
-    <div style={{ fontFamily: "DM Sans, sans-serif", background: "#F7F4EF", minHeight: "100vh", display: "flex" }}>
+  const sidebarStyle = { width:"220px", minHeight:"100vh", background:"#1A2E44", color:"#fff", padding:"30px 20px", display:"flex", flexDirection:"column", gap:"8px" };
+  const mainStyle = { flex:1, padding:"40px", background:"#F8F5F0", minHeight:"100vh" };
+  const cardStyle = { background:"#fff", borderRadius:"12px", padding:"20px", marginBottom:"12px", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" };
+  const statBoxStyle = { background:"#fff", borderRadius:"12px", padding:"24px", textAlign:"center", flex:1, boxShadow:"0 2px 8px rgba(0,0,0,0.06)" };
 
-      <div style={{ width: "220px", background: "#1A2E44", display: "flex", flexDirection: "column", position: "fixed", top: 0, left: 0, height: "100vh" }}>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: "20px", color: "#fff", padding: "28px 24px 20px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          MatchTutor
-          <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>Find your perfect tutor</div>
+  return (
+    <div style={{ display:"flex" }}>
+      <div style={sidebarStyle}>
+        <div style={{ fontSize:"22px", fontWeight:700, marginBottom:"20px" }}>MatchTutor</div>
+        <div style={{ fontSize:"12px", color:"rgba(255,255,255,0.5)", marginBottom:"20px" }}>
+          {isTutor ? "Tutor Panel" : "Student Panel"}
         </div>
-        <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "rgba(125,201,168,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", color: "#7DC9A8", fontWeight: 600 }}>T</div>
-          <div>
-            <div style={{ fontSize: "13px", color: "#fff", fontWeight: 500 }}>Tutor Panel</div>
-            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>Admin View</div>
-          </div>
-        </div>
-        <div style={{ padding: "10px 24px", fontSize: "13px", color: "#fff", borderLeft: "2px solid #7DC9A8", background: "rgba(255,255,255,0.07)", cursor: "pointer" }}>Dashboard</div>
-        <div style={{ padding: "10px 24px", fontSize: "13px", color: "rgba(255,255,255,0.5)", borderLeft: "2px solid transparent", cursor: "pointer" }}>Bookings</div>
-        <div style={{ padding: "10px 24px", fontSize: "13px", color: "rgba(255,255,255,0.5)", borderLeft: "2px solid transparent", cursor: "pointer" }}>Tutors</div>
-        <div style={{ marginTop: "auto", padding: "20px 24px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-          <a href="/" style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Back to website</a>
+        <div style={{ padding:"10px", background:"rgba(125,201,168,0.2)", borderRadius:"8px", cursor:"pointer" }}>Dashboard</div>
+        <div style={{ padding:"10px", cursor:"pointer", color:"rgba(255,255,255,0.7)" }} onClick={() => navigate("/")}>Back to website</div>
+        <div style={{ marginTop:"auto", padding:"10px", cursor:"pointer", color:"rgba(255,255,255,0.5)" }} 
+          onClick={() => { localStorage.removeItem("user"); localStorage.removeItem("token"); navigate("/login"); }}>
+          Logout
         </div>
       </div>
 
-      <div style={{ marginLeft: "220px", flex: 1, padding: "36px 40px" }}>
-        <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "26px", color: "#1A2E44", fontWeight: 600 }}>Tutor Dashboard</h1>
-          <p style={{ fontSize: "13px", color: "#888", marginTop: "4px" }}>Manage student booking requests</p>
-        </div>
+      <div style={mainStyle}>
+        <h1 style={{ marginBottom:"8px" }}>{isTutor ? "Tutor Dashboard" : "Student Dashboard"}</h1>
+        <p style={{ color:"#666", marginBottom:"30px" }}>
+          {isTutor ? "Manage student booking requests" : "Track your booking requests"}
+        </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "32px" }}>
-          <div style={{ background: "#fff", border: "1px solid #EDE9E2", borderRadius: "12px", padding: "20px" }}>
-            <div style={{ fontSize: "20px", marginBottom: "8px" }}>📬</div>
-            <div style={{ fontSize: "12px", color: "#888" }}>Pending Bookings</div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: "32px", color: "#EF9F27", fontWeight: 600 }}>{pending.length}</div>
+        {/* Stats */}
+        <div style={{ display:"flex", gap:"16px", marginBottom:"32px" }}>
+          <div style={statBoxStyle}>
+            <div style={{ fontSize:"32px", fontWeight:700, color:"#F59E0B" }}>{pending.length}</div>
+            <div style={{ color:"#666", marginTop:"4px" }}>Pending</div>
           </div>
-          <div style={{ background: "#fff", border: "1px solid #EDE9E2", borderRadius: "12px", padding: "20px" }}>
-            <div style={{ fontSize: "20px", marginBottom: "8px" }}>✅</div>
-            <div style={{ fontSize: "12px", color: "#888" }}>Accepted Bookings</div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: "32px", color: "#1D9E75", fontWeight: 600 }}>{accepted.length}</div>
+          <div style={statBoxStyle}>
+            <div style={{ fontSize:"32px", fontWeight:700, color:"#10B981" }}>{accepted.length}</div>
+            <div style={{ color:"#666", marginTop:"4px" }}>Accepted</div>
           </div>
-          <div style={{ background: "#fff", border: "1px solid #EDE9E2", borderRadius: "12px", padding: "20px" }}>
-            <div style={{ fontSize: "20px", marginBottom: "8px" }}>❌</div>
-            <div style={{ fontSize: "12px", color: "#888" }}>Rejected Bookings</div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: "32px", color: "#E24B4A", fontWeight: 600 }}>{rejected.length}</div>
+          <div style={statBoxStyle}>
+            <div style={{ fontSize:"32px", fontWeight:700, color:"#EF4444" }}>{rejected.length}</div>
+            <div style={{ color:"#666", marginTop:"4px" }}>Rejected</div>
           </div>
         </div>
 
-        <div style={{ marginBottom: "8px", fontFamily: "Georgia, serif", fontSize: "18px", color: "#1A2E44" }}>
-          Pending Requests
-          {pending.length > 0 && <span style={{ background: "#EF9F27", color: "#fff", fontSize: "12px", padding: "2px 8px", borderRadius: "20px", marginLeft: "8px" }}>{pending.length}</span>}
-        </div>
-
-        <div style={{ marginBottom: "32px" }}>
-          {loading ? (
-            <p style={{ color: "#888" }}>Loading...</p>
-          ) : pending.length === 0 ? (
-            <div style={{ background: "#fff", border: "1px solid #EDE9E2", borderRadius: "12px", padding: "30px", textAlign: "center", color: "#888" }}>No pending bookings yet</div>
-          ) : pending.map(b => (
-            <div key={b._id} style={{ background: "#fff", border: "1px solid #EDE9E2", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "#E1F5EE", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>👤</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, color: "#1A2E44", fontSize: "14px" }}>{b.studentName}</div>
-                <div style={{ fontSize: "12px", color: "#888", marginTop: "2px" }}>{b.email} · {b.subject} {b.tutorName ? "· " + b.tutorName : ""}</div>
-                <div style={{ fontSize: "12px", color: "#666", marginTop: "4px", fontStyle: "italic" }}>"{b.message}"</div>
-              </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={() => handleAction(b._id, "accept")} style={{ padding: "8px 16px", background: "#1D9E75", color: "#fff", border: "none", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>Accept</button>
-                <button onClick={() => handleAction(b._id, "reject")} style={{ padding: "8px 16px", background: "#E24B4A", color: "#fff", border: "none", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>Reject</button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {accepted.length > 0 && (
-          <div style={{ marginBottom: "32px" }}>
-            <div style={{ marginBottom: "16px", fontFamily: "Georgia, serif", fontSize: "18px", color: "#1A2E44" }}>Accepted Bookings</div>
-            {accepted.map(b => (
-              <div key={b._id} style={{ background: "#fff", border: "1px solid #A8E6CF", borderRadius: "12px", padding: "16px 20px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
-                <span style={{ fontSize: "20px" }}>✅</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, color: "#1A2E44", fontSize: "14px" }}>{b.studentName}</div>
-                  <div style={{ fontSize: "12px", color: "#888" }}>{b.email} · {b.subject}</div>
+        {/* Pending */}
+        {pending.length > 0 && (
+          <>
+            <h2 style={{ marginBottom:"16px" }}>Pending Requests <span style={{ background:"#F59E0B", color:"#fff", borderRadius:"20px", padding:"2px 10px", fontSize:"14px" }}>{pending.length}</span></h2>
+            {pending.map(b => (
+              <div key={b._id} style={{ ...cardStyle, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <div style={{ fontWeight:600, fontSize:"16px" }}>{b.studentName}</div>
+                  <div style={{ color:"#666", fontSize:"14px" }}>{b.email} · {b.subject} · {b.tutorName}</div>
+                  <div style={{ color:"#888", fontSize:"13px", fontStyle:"italic" }}>"{b.message}"</div>
                 </div>
-                <span style={{ background: "#E1F5EE", color: "#0F6E56", fontSize: "11px", padding: "3px 10px", borderRadius: "20px", fontWeight: 500 }}>Accepted</span>
+                {isTutor && (
+                  <div style={{ display:"flex", gap:"8px" }}>
+                    <button onClick={() => handleAction(b._id, "accept")} style={{ padding:"8px 20px", background:"#10B981", color:"#fff", border:"none", borderRadius:"8px", cursor:"pointer", fontWeight:600 }}>Accept</button>
+                    <button onClick={() => handleAction(b._id, "reject")} style={{ padding:"8px 20px", background:"#EF4444", color:"#fff", border:"none", borderRadius:"8px", cursor:"pointer", fontWeight:600 }}>Reject</button>
+                  </div>
+                )}
               </div>
             ))}
-          </div>
+          </>
         )}
 
-        {rejected.length > 0 && (
-          <div>
-            <div style={{ marginBottom: "16px", fontFamily: "Georgia, serif", fontSize: "18px", color: "#1A2E44" }}>Rejected Bookings</div>
-            {rejected.map(b => (
-              <div key={b._id} style={{ background: "#fff", border: "1px solid #F5C6C6", borderRadius: "12px", padding: "16px 20px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
-                <span style={{ fontSize: "20px" }}>❌</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, color: "#1A2E44", fontSize: "14px" }}>{b.studentName}</div>
-                  <div style={{ fontSize: "12px", color: "#888" }}>{b.email} · {b.subject}</div>
-                </div>
-                <span style={{ background: "#FDECEA", color: "#C0392B", fontSize: "11px", padding: "3px 10px", borderRadius: "20px", fontWeight: 500 }}>Rejected</span>
+        {/* Accepted */}
+        {accepted.length > 0 && (
+          <>
+            <h2 style={{ margin:"24px 0 16px" }}>Accepted Bookings</h2>
+            {accepted.map(b => (
+              <div key={b._id} style={{ ...cardStyle, borderLeft:"4px solid #10B981" }}>
+                <div style={{ fontWeight:600 }}>{b.studentName}</div>
+                <div style={{ color:"#666", fontSize:"14px" }}>{b.email} · {b.subject} · {b.tutorName}</div>
+                <span style={{ background:"#D1FAE5", color:"#065F46", padding:"2px 10px", borderRadius:"20px", fontSize:"12px" }}>Accepted</span>
               </div>
             ))}
-          </div>
+          </>
+        )}
+
+        {/* Rejected */}
+        {rejected.length > 0 && (
+          <>
+            <h2 style={{ margin:"24px 0 16px" }}>Rejected Bookings</h2>
+            {rejected.map(b => (
+              <div key={b._id} style={{ ...cardStyle, borderLeft:"4px solid #EF4444" }}>
+                <div style={{ fontWeight:600 }}>{b.studentName}</div>
+                <div style={{ color:"#666", fontSize:"14px" }}>{b.email} · {b.subject} · {b.tutorName}</div>
+                <span style={{ background:"#FEE2E2", color:"#991B1B", padding:"2px 10px", borderRadius:"20px", fontSize:"12px" }}>Rejected</span>
+              </div>
+            ))}
+          </>
+        )}
+
+        {bookings.length === 0 && (
+          <div style={{ textAlign:"center", padding:"60px", color:"#999" }}>No bookings yet.</div>
         )}
       </div>
     </div>
