@@ -5,7 +5,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 router.post('/signup', async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { firstName, lastName, name: fullName, email, password, role } = req.body;
+  const name = fullName || `${firstName} ${lastName}`;
   try {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ error: 'Email already registered' });
@@ -25,8 +26,15 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(400).json({ error: 'User not found' });
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ error: 'Wrong password' });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'secret123', { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'secret123',
+      { expiresIn: '7d' }
+    );
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });
   }
