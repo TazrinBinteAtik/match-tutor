@@ -11,7 +11,7 @@ router.post('/signup', async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ error: 'Email already registered' });
     const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashed, role });
+    const user = new User({ name, email, password: hashed, role: role ? role.toLowerCase() : 'student' });
     await user.save();
     res.json({ message: 'Signup successful!' });
   } catch (err) {
