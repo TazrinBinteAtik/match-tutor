@@ -178,19 +178,7 @@ function Home() {
           </form>
         )}
       </section>
-          <input type="text" name="studentName" placeholder="Your name" value={formData.studentName} onChange={handleChange} />
-          <input type="email" name="email" placeholder="Your email" value={formData.email} onChange={handleChange} />
-          <select name="tutorName" value={formData.tutorName} onChange={handleChange} style={{ padding: "12px 16px", border: "1.5px solid #E0DBD4", borderRadius: "10px", fontSize: "14px", fontFamily: "DM Sans, sans-serif", color: formData.tutorName ? "#1A2E44" : "#999", background: "#fff", outline: "none" }}>
-            <option value="" disabled>Select tutor you want to book</option>
-            {tutors.filter(t => t.available).map(t => (
-              <option key={t._id} value={t.name}>{t.name} - {t.subject} ({t.rate})</option>
-            ))}
-          </select>
-          <input type="text" name="subject" placeholder="Subject you need help with" value={formData.subject} onChange={handleChange} />
-          <textarea name="message" placeholder="Your message" rows="5" value={formData.message} onChange={handleChange} />
-          <button type="submit">Send Booking Request</button>
-        </form>
-      </section>
+
     </div>
   );
 }

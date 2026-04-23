@@ -12,8 +12,7 @@ export default function Signup() {
 
   const handleSubmit = async () => {
     if (!form.firstName || !form.lastName || !form.email || !form.password) {
-      alert("Please fill in all fields");
-      return;
+      alert("Please fill in all fields"); return;
     }
     setLoading(true);
     try {
@@ -24,13 +23,13 @@ export default function Signup() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Account created successfully! Welcome, ${form.firstName}!`);
+        alert(`Account created! Welcome, ${data.user.firstName}!`);
         navigate("/login");
       } else {
         alert(data.error || "Signup failed");
       }
     } catch (err) {
-      alert("Something went wrong. Please try again.");
+      alert("Something went wrong.");
     }
     setLoading(false);
   };
@@ -40,7 +39,7 @@ export default function Signup() {
       <div style={{ width: "100%", maxWidth: "960px", display: "flex", borderRadius: "16px", overflow: "hidden", boxShadow: "0 24px 64px rgba(26,46,68,0.16)" }}>
         <div style={{ width: "42%", background: "#1A2E44", padding: "48px 40px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: "24px", color: "#fff", fontWeight: 600 }}>Match<span style={{ color: "#7DC9A8", fontStyle: "italic", fontWeight: 400 }}>Tutor</span></div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: "24px", color: "#fff", fontWeight: 600 }}>Match<span style={{ color: "#7DC9A8", fontStyle: "italic" }}>Tutor</span></div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "5px" }}>Find your perfect tutor</div>
           </div>
           <div>
