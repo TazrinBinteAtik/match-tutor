@@ -152,7 +152,32 @@ function Home() {
 
       <section id="book">
         <h2>Book a Tutor</h2>
-        <form className="book-form" onSubmit={handleSubmit}>
+        {!localStorage.getItem("user") ? (
+          <div style={{ background: "#fff", border: "1px solid #EDE9E2", borderRadius: "14px", padding: "32px", maxWidth: "560px" }}>
+            <div style={{ fontSize: "32px", marginBottom: "12px" }}>🔒</div>
+            <h3 style={{ fontFamily: "Georgia, serif", fontSize: "20px", color: "#1A2E44", marginBottom: "8px" }}>Login required to book a tutor</h3>
+            <p style={{ color: "#888", fontSize: "14px", marginBottom: "20px" }}>You need to create an account or sign in before booking a session.</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => navigate("/signup")} style={{ padding: "10px 20px", background: "#1A2E44", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px" }}>Sign Up Free</button>
+              <button onClick={() => navigate("/login")} style={{ padding: "10px 20px", background: "transparent", color: "#1A2E44", border: "1.5px solid #1A2E44", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px" }}>Login</button>
+            </div>
+          </div>
+        ) : (
+          <form className="book-form" onSubmit={handleSubmit}>
+            <input type="text" name="studentName" placeholder="Your name" value={formData.studentName} onChange={handleChange} />
+            <input type="email" name="email" placeholder="Your email" value={formData.email} onChange={handleChange} />
+            <select name="tutorName" value={formData.tutorName} onChange={handleChange} style={{ padding: "12px 16px", border: "1.5px solid #E0DBD4", borderRadius: "10px", fontSize: "14px", fontFamily: "DM Sans, sans-serif", color: formData.tutorName ? "#1A2E44" : "#999", background: "#fff", outline: "none" }}>
+              <option value="" disabled>Select tutor you want to book</option>
+              {tutors.filter(t => t.available).map(t => (
+                <option key={t._id} value={t.name}>{t.name} - {t.subject} ({t.rate})</option>
+              ))}
+            </select>
+            <input type="text" name="subject" placeholder="Subject you need help with" value={formData.subject} onChange={handleChange} />
+            <textarea name="message" placeholder="Your message" rows="5" value={formData.message} onChange={handleChange} />
+            <button type="submit">Send Booking Request</button>
+          </form>
+        )}
+      </section>
           <input type="text" name="studentName" placeholder="Your name" value={formData.studentName} onChange={handleChange} />
           <input type="email" name="email" placeholder="Your email" value={formData.email} onChange={handleChange} />
           <select name="tutorName" value={formData.tutorName} onChange={handleChange} style={{ padding: "12px 16px", border: "1.5px solid #E0DBD4", borderRadius: "10px", fontSize: "14px", fontFamily: "DM Sans, sans-serif", color: formData.tutorName ? "#1A2E44" : "#999", background: "#fff", outline: "none" }}>
